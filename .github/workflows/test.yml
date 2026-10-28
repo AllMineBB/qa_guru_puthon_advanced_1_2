@@ -7,6 +7,9 @@ jobs:
   tests:
     name: Test app
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -14,8 +17,18 @@ jobs:
           python-version: '3.13'
           cache: 'pip'
       - run: pip install --upgrade -r requirements.txt
-      - run: docker compose up -d --build
-      - run: pytest tests -v
+      - run: docker compose build
+      - run: docker compose up -d
+      - run: sleep 10
+      - run: pytest tests --junit-xml=test-results.xml
+        env:
+          APP_URL: http://127.0.0.1:8002
+
+      - name: Publish test results
+        uses: pmeier/pytest-results-action@main
+        with:
+          path: test-results.xml
+        if: always()
 
       - run: docker compose logs app
         if: always()

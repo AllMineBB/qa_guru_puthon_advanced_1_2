@@ -19,9 +19,15 @@ jobs:
       - run: pip install --upgrade -r requirements.txt
       - run: docker compose build
       - run: docker compose up -d
-      - run: pytest tests --junit-xml=test-rtesults.xml
+      - run: pytest tests --junit-xml=test-results.xml
         env:
           APP_URL: http://127.0.0.1:8002
+
+      - name: Publish test results
+        uses: pmeier/pytest-results-action@main
+        with:
+          path: test-results.xml
+        if: always()
 
       - run: docker compose logs app
         if: always()
